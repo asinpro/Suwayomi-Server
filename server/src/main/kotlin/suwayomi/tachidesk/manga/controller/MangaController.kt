@@ -466,18 +466,65 @@ object MangaController {
             behaviorOf = { ctx, mangaId, chapterIndex, index, updateProgress, format ->
                 ctx.getAttribute(Attribute.TachideskUser).requireUser()
                 ctx.future {
-                    future {
-                        Page.getPageImage(
+                    future { Page.getPageImage(
                             mangaId = mangaId,
                             chapterIndex = chapterIndex,
                             index = index,
                             format = format,
+                            forceTranslated = false,
                         )
                     }.thenApply {
                         ctx.header("content-type", it.second)
                         val httpCacheSeconds = 1.days.inWholeSeconds
                         ctx.header("cache-control", "max-age=$httpCacheSeconds")
                         ctx.result(it.first)
+
+                         if (updateProgress == true) {
+                            val chapterId = Chapter.updateChapterProgress(mangaId, chapterIndex, pageNo = index)
+                            // Sync progress with KoreaderSync if chapter update was successful
+                            if (chapterId != -1) {
+                                GlobalScope.launch { KoreaderSyncService.pushProgress(chapterId) }
+                            }
+                        }
+                    }
+                }
+            },
+            withResults = {
+                image(HttpStatus.OK)
+                httpCode(HttpStatus.NOT_FOUND)
+            },
+        )
+
+    /** get translated page at index "index" */
+    val pageRetrieveTranslated =
+        handler(
+            pathParam<Int>("mangaId"),
+            pathParam<Int>("chapterIndex"),
+            pathParam<Int>("index"),
+            queryParam<Boolean?>("updateProgress"),
+            queryParam<String?>("format"),
+            documentWith = {
+                withOperation {
+                    summary("Get a translated chapter page")
+                    description(
+                        "Get a translated chapter page for a given index. Always retrieves from the translated folder if available."
+                    )
+                }
+            },
+            behaviorOf = { ctx, mangaId, chapterIndex, index, updateProgress, format ->
+                ctx.future {
+                    future { Page.getPageImage(
+                            mangaId = mangaId,
+                            chapterIndex = chapterIndex,
+                            index = index,
+                            format = format,
+                            forceTranslated = true,
+                        )
+                    }.thenApply {
+                            ctx.header("content-type", it.second)
+                            val httpCacheSeconds = 1.days.inWholeSeconds
+                            ctx.header("cache-control", "max-age=$httpCacheSeconds")
+                            ctx.result(it.first)
 
                         if (updateProgress == true) {
                             val chapterId = Chapter.updateChapterProgress(mangaId, chapterIndex, pageNo = index)

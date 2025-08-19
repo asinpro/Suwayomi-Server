@@ -24,6 +24,10 @@ data class SyncConflictInfoType(
     val remotePage: Int,
 )
 
+data class ChapterTranslationType(
+    val imageUrls: List<String>,
+)
+
 class ChapterType(
     val id: Int,
     val url: String,
@@ -41,7 +45,8 @@ class ChapterType(
     val fetchedAt: Long,
     val isDownloaded: Boolean,
     val pageCount: Int,
-//    val chapterCount: Int?,
+    //    val chapterCount: Int?,
+    val isTranslated: Boolean,
 ) : Node {
     companion object {
         fun clearCacheFor(
@@ -56,7 +61,7 @@ class ChapterType(
         }
     }
 
-    constructor(row: ResultRow) : this(
+    constructor(row: ResultRow, isTranslated: Boolean = false) : this(
         row[ChapterTable.id].value,
         row[ChapterTable.url],
         row[ChapterTable.name],
@@ -73,7 +78,7 @@ class ChapterType(
         row[ChapterTable.fetchedAt],
         row[ChapterTable.isDownloaded],
         row[ChapterTable.pageCount],
-//        transaction { ChapterTable.selectAll().where { Manga eq chapterEntry[manga].value }.count().toInt() },
+        isTranslated = isTranslated,
     )
 
     constructor(dataClass: ChapterDataClass) : this(
@@ -93,6 +98,7 @@ class ChapterType(
         dataClass.fetchedAt,
         dataClass.downloaded,
         dataClass.pageCount,
+        dataClass.isTranslated,
     )
 
     fun manga(dataFetchingEnvironment: DataFetchingEnvironment): CompletableFuture<MangaType> =

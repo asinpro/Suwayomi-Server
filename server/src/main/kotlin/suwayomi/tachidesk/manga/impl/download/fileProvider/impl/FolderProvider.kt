@@ -9,6 +9,7 @@ import suwayomi.tachidesk.manga.impl.download.fileProvider.FileType.RegularFile
 import suwayomi.tachidesk.manga.impl.util.getChapterCachePath
 import suwayomi.tachidesk.manga.impl.util.getChapterDownloadPath
 import suwayomi.tachidesk.manga.impl.util.storage.FileDeletionHelper
+import suwayomi.tachidesk.manga.impl.util.getChapterTranslatedPath
 import suwayomi.tachidesk.manga.model.table.ChapterTable
 import suwayomi.tachidesk.server.ApplicationDirs
 import uy.kohesive.injekt.injectLazy
@@ -28,15 +29,24 @@ private val applicationDirs: ApplicationDirs by injectLazy()
 class FolderProvider(
     mangaId: Int,
     chapterId: Int,
+    private val forceTranslated: Boolean = false,
 ) : ChaptersFilesProvider<RegularFile>(mangaId, chapterId) {
-    override fun getImageFiles(): List<RegularFile> {
+    private fun getEffectiveChapterFolder(): File {
         val chapterFolder = File(getChapterDownloadPath(mangaId, chapterId))
+        val translatedFolder = File(getChapterTranslatedPath(mangaId, chapterId))
+        return if (forceTranslated && translatedFolder.exists()) {
+            translatedFolder
+        } else {
+            chapterFolder
+        }
+    }
 
-        if (!chapterFolder.exists()) {
+    override fun getImageFiles(): List<RegularFile> {
+        val effectiveFolder = getEffectiveChapterFolder()
+        if (!effectiveFolder.exists()) {
             throw Exception("download folder does not exist")
         }
-
-        return chapterFolder
+        return effectiveFolder
             .listFiles()
             .orEmpty()
             .toList()

@@ -17,6 +17,7 @@ import suwayomi.tachidesk.graphql.server.getAttribute
 import suwayomi.tachidesk.graphql.types.ChapterMetaType
 import suwayomi.tachidesk.graphql.types.ChapterType
 import suwayomi.tachidesk.graphql.types.SyncConflictInfoType
+import suwayomi.tachidesk.graphql.types.ChapterTranslationType
 import suwayomi.tachidesk.manga.impl.Chapter
 import suwayomi.tachidesk.manga.impl.chapter.getChapterDownloadReadyById
 import suwayomi.tachidesk.manga.impl.sync.KoreaderSyncService
@@ -283,6 +284,7 @@ class ChapterMutation {
         val pages: List<String>,
         val chapter: ChapterType,
         val syncConflict: SyncConflictInfoType?,
+        val translation: ChapterTranslationType?
     )
 
     fun fetchChapterPages(
@@ -348,6 +350,11 @@ class ChapterMutation {
                         },
                     chapter = ChapterType(chapter),
                     syncConflict = syncConflictInfo,
+                    translation = ChapterTranslationType(
+                        imageUrls = List(chapter.pageCount) { index ->
+                            "/api/v1/manga/${chapter.mangaId}/chapter/${chapter.index}/translated/page/${index}$params"
+                        }
+                    ),
                 )
             }
         }

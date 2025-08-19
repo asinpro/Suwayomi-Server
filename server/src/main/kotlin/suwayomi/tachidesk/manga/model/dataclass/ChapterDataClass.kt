@@ -40,6 +40,8 @@ data class ChapterDataClass(
     val chapterCount: Int? = null,
     /** used to store client specific values */
     val meta: Map<String, String> = emptyMap(),
+    /** indicates if the chapter has been translated */
+    val isTranslated: Boolean = false
 ) {
     companion object {
         fun fromSChapter(
@@ -49,6 +51,7 @@ data class ChapterDataClass(
             fetchedAt: Long,
             mangaId: Int,
             realUrl: String?,
+            isTranslated: Boolean = false,
         ): ChapterDataClass =
             ChapterDataClass(
                 id = id,
@@ -66,6 +69,7 @@ data class ChapterDataClass(
                 lastPageRead = 0,
                 lastReadAt = 0,
                 downloaded = false,
+                isTranslated = isTranslated,
             )
     }
 }

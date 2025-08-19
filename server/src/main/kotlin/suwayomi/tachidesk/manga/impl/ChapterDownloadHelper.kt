@@ -21,7 +21,8 @@ object ChapterDownloadHelper {
         mangaId: Int,
         chapterId: Int,
         index: Int,
-    ): Pair<InputStream, String> = provider(mangaId, chapterId).getImage().execute(index)
+        forceTranslated: Boolean = false,
+    ): Pair<InputStream, String> = provider(mangaId, chapterId, forceTranslated).getImage().execute(index)
 
     fun getImageCount(
         mangaId: Int,
@@ -48,12 +49,13 @@ object ChapterDownloadHelper {
     private fun provider(
         mangaId: Int,
         chapterId: Int,
+        forceTranslated: Boolean = false,
     ): ChaptersFilesProvider<*> {
         val chapterFolder = File(getChapterDownloadPath(mangaId, chapterId))
         val cbzFile = File(getChapterCbzPath(mangaId, chapterId))
         if (cbzFile.exists()) return ArchiveProvider(mangaId, chapterId)
         if (!chapterFolder.exists() && serverConfig.downloadAsCbz.value) return ArchiveProvider(mangaId, chapterId)
-        return FolderProvider(mangaId, chapterId)
+        return FolderProvider(mangaId, chapterId, forceTranslated)
     }
 
     fun getArchiveStreamWithSize(

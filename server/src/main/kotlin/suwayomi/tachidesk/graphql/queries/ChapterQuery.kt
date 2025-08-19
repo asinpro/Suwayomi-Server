@@ -42,8 +42,10 @@ import suwayomi.tachidesk.graphql.server.primitives.lessNotUnique
 import suwayomi.tachidesk.graphql.server.primitives.maybeSwap
 import suwayomi.tachidesk.graphql.types.ChapterNodeList
 import suwayomi.tachidesk.graphql.types.ChapterType
+import suwayomi.tachidesk.manga.impl.util.getChapterTranslatedPath
 import suwayomi.tachidesk.manga.model.table.ChapterTable
 import suwayomi.tachidesk.manga.model.table.MangaTable
+import java.io.File
 import suwayomi.tachidesk.server.JavalinSetup.Attribute
 import suwayomi.tachidesk.server.JavalinSetup.getAttribute
 import suwayomi.tachidesk.server.user.requireUser
@@ -270,7 +272,11 @@ class ChapterQuery {
 
         val getAsCursor: (ChapterType) -> Cursor = (order?.firstOrNull()?.by ?: ChapterOrderBy.ID)::asCursor
 
-        val resultsAsType = queryResults.results.map { ChapterType(it) }
+        val resultsAsType = queryResults.results.map {
+            val isDownloaded = it[ChapterTable.isDownloaded]
+            val isTranslated = isDownloaded && File(getChapterTranslatedPath(it[ChapterTable.manga].value, it[ChapterTable.id].value)).exists()
+            ChapterType(it, isTranslated)
+        }
 
         return ChapterNodeList(
             resultsAsType,

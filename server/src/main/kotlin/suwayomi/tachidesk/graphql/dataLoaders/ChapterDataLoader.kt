@@ -22,7 +22,9 @@ import suwayomi.tachidesk.graphql.types.ChapterNodeList
 import suwayomi.tachidesk.graphql.types.ChapterNodeList.Companion.toNodeList
 import suwayomi.tachidesk.graphql.types.ChapterType
 import suwayomi.tachidesk.manga.model.table.ChapterTable
+import suwayomi.tachidesk.manga.impl.util.getChapterTranslatedPath
 import suwayomi.tachidesk.server.JavalinSetup.future
+import java.io.File
 
 class ChapterDataLoader : KotlinDataLoader<Int, ChapterType?> {
     override val dataLoaderName = "ChapterDataLoader"
@@ -36,7 +38,11 @@ class ChapterDataLoader : KotlinDataLoader<Int, ChapterType?> {
                         ChapterTable
                             .selectAll()
                             .where { ChapterTable.id inList ids }
-                            .map { ChapterType(it) }
+                            .map {
+                                val isDownloaded = it[ChapterTable.isDownloaded]
+                                val isTranslated = isDownloaded && File(getChapterTranslatedPath(it[ChapterTable.manga].value, it[ChapterTable.id].value)).exists()
+                                ChapterType(it, isTranslated)
+                            }
                             .associateBy { it.id }
                     ids.map { chapters[it] }
                 }
@@ -56,7 +62,11 @@ class ChaptersForMangaDataLoader : KotlinDataLoader<Int, ChapterNodeList> {
                         ChapterTable
                             .selectAll()
                             .where { ChapterTable.manga inList ids }
-                            .map { ChapterType(it) }
+                            .map {
+                                val isDownloaded = it[ChapterTable.isDownloaded]
+                                val isTranslated = isDownloaded && File(getChapterTranslatedPath(it[ChapterTable.manga].value, it[ChapterTable.id].value)).exists()
+                                ChapterType(it, isTranslated)
+                            }
                             .groupBy { it.mangaId }
                     ids.map { (chaptersByMangaId[it] ?: emptyList()).toNodeList() }
                 }

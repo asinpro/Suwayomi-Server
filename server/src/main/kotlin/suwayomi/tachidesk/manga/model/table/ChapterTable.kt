@@ -47,6 +47,7 @@ fun ChapterTable.toDataClass(
     chapterEntry: ResultRow,
     includeChapterCount: Boolean = true,
     includeChapterMeta: Boolean = true,
+    isTranslated: Boolean = false,
 ) = ChapterDataClass(
     id = chapterEntry[id].value,
     url = chapterEntry[url],
@@ -82,4 +83,5 @@ fun ChapterTable.toDataClass(
         } else {
             emptyMap()
         },
+    isTranslated = isTranslated
 )

@@ -52,6 +52,7 @@ object Page {
         chapterIndex: Int? = null,
         index: Int,
         format: String? = null,
+        forceTranslated: Boolean = false,
         progressFlow: ((StateFlow<Int>) -> Unit)? = null,
     ): Pair<InputStream, String> {
         val mangaEntry = transaction { MangaTable.selectAll().where { MangaTable.id eq mangaId }.first() }
@@ -73,7 +74,7 @@ object Page {
 
         try {
             if (chapterEntry[ChapterTable.isDownloaded]) {
-                return convertImageResponse(ChapterDownloadHelper.getImage(mangaId, chapterId, index), format)
+                return convertImageResponse(ChapterDownloadHelper.getImage(mangaId, chapterId, index, forceTranslated), format)
             }
         } catch (_: Exception) {
             // ignore and fetch again
